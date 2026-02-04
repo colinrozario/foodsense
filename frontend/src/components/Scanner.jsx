@@ -23,8 +23,6 @@ const Scanner = ({ onBarcodeScanned, onImageCaptured, loading }) => {
     const capture = useCallback(() => {
         const imageSrc = webcamRef.current.getScreenshot();
         if (imageSrc) {
-            // Convert base64 to blob? Or just send base64 to API (FastAPI base64 support needed or convert)
-            // For now, let's assume we pass the raw dataURI/blob to parent
             fetch(imageSrc)
                 .then(res => res.blob())
                 .then(blob => {
@@ -35,59 +33,76 @@ const Scanner = ({ onBarcodeScanned, onImageCaptured, loading }) => {
     }, [webcamRef, onImageCaptured]);
 
     return (
-        <div className="relative h-screen w-full bg-black overflow-hidden">
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative h-screen w-full bg-brand-black overflow-hidden flex flex-col"
+        >
 
-            {/* Camera View */}
-            {mode === 'barcode' ? (
-                <div className="relative h-full w-full">
-                    <video ref={barcodeRef} className="h-full w-full object-cover" />
-                    {/* Overlay */}
-                    <div className="absolute inset-0 border-2 border-white/20 m-12 rounded-2xl pointer-events-none flex items-center justify-center">
-                        <div className="w-64 h-1 bg-red-500/50 blur-sm animate-pulse" />
+            {/* Camera Viewfinder Area - Takes up most space */}
+            <div className="relative flex-1 m-4 rounded-[2rem] overflow-hidden border border-white/10 bg-brand-dark shadow-2xl">
+                {mode === 'barcode' ? (
+                    <div className="relative h-full w-full">
+                        <video ref={barcodeRef} className="h-full w-full object-cover" />
+                        {/* High-Tech Overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center p-12 pointer-events-none">
+                            <div className="w-full aspect-square border-2 border-acid-green/50 rounded-3xl relative">
+                                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-acid-green -mt-1 -ml-1 rounded-tl-xl" />
+                                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-acid-green -mt-1 -mr-1 rounded-tr-xl" />
+                                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-acid-green -mb-1 -ml-1 rounded-bl-xl" />
+                                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-acid-green -mb-1 -mr-1 rounded-br-xl" />
+                                <div className="absolute inset-0 bg-acid-green/5 animate-pulse" />
+                            </div>
+                        </div>
                     </div>
-                </div>
-            ) : (
-                <div className="relative h-full w-full">
-                    <Webcam
-                        ref={webcamRef}
-                        audio={false}
-                        screenshotFormat="image/jpeg"
-                        videoConstraints={{ facingMode: "environment" }}
-                        className="h-full w-full object-cover"
-                    />
-                </div>
-            )}
+                ) : (
+                    <div className="relative h-full w-full">
+                        <Webcam
+                            ref={webcamRef}
+                            audio={false}
+                            screenshotFormat="image/jpeg"
+                            videoConstraints={{ facingMode: "environment" }}
+                            className="h-full w-full object-cover"
+                        />
+                    </div>
+                )}
 
-            {/* Loading Overlay */}
-            {loading && (
-                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center z-20">
-                    <div className="w-16 h-16 border-4 border-white/20 border-t-safe-green rounded-full animate-spin mb-4" />
-                    <p className="text-white font-medium tracking-wide animate-pulse">Analyzing...</p>
-                </div>
-            )}
+                {/* Loading Overlay */}
+                {loading && (
+                    <div className="absolute inset-0 bg-brand-black/90 backdrop-blur-md flex flex-col items-center justify-center z-20">
+                        <div className="w-16 h-16 border-4 border-brand-gray border-t-acid-green rounded-full animate-spin mb-6" />
+                        <p className="text-acid-green font-bold tracking-widest uppercase animate-pulse">Processing Data</p>
+                    </div>
+                )}
+            </div>
 
-            {/* Controls */}
-            <div className="absolute bottom-8 inset-x-0 z-10 flex flex-col items-center gap-6">
+            {/* Controls Area */}
+            <div className="h-[25vh] w-full bg-brand-black flex flex-col items-center justify-start pt-4 gap-6 px-6">
+
+                <p className="text-gray-500 text-xs font-medium tracking-widest uppercase">
+                    {mode === 'barcode' ? "Target barcode within frame" : "Capture nutrition label"}
+                </p>
 
                 {/* Mode Switcher */}
-                <div className="bg-black/40 backdrop-blur-md rounded-full p-1 flex border border-white/10">
+                <div className="bg-brand-gray p-1 rounded-full flex gap-1 relative z-10">
                     <button
                         onClick={() => setMode('barcode')}
                         className={clsx(
-                            "px-6 py-3 rounded-full text-sm font-bold flex items-center gap-2 transition-all",
-                            mode === 'barcode' ? "bg-white text-black" : "text-white/60 hover:text-white"
+                            "px-8 py-3 rounded-full text-sm font-bold flex items-center gap-2 transition-all duration-300",
+                            mode === 'barcode' ? "bg-acid-green text-black shadow-[0_0_20px_rgba(204,255,0,0.3)]" : "text-gray-400 hover:text-white"
                         )}
                     >
-                        <Scan size={18} /> Barcode
+                        <Scan size={18} /> SCANN
                     </button>
                     <button
                         onClick={() => setMode('label')}
                         className={clsx(
-                            "px-6 py-3 rounded-full text-sm font-bold flex items-center gap-2 transition-all",
-                            mode === 'label' ? "bg-white text-black" : "text-white/60 hover:text-white"
+                            "px-8 py-3 rounded-full text-sm font-bold flex items-center gap-2 transition-all duration-300",
+                            mode === 'label' ? "bg-acid-green text-black shadow-[0_0_20px_rgba(204,255,0,0.3)]" : "text-gray-400 hover:text-white"
                         )}
                     >
-                        <Camera size={18} /> Label
+                        <Camera size={18} /> LABEL
                     </button>
                 </div>
 
@@ -99,18 +114,14 @@ const Scanner = ({ onBarcodeScanned, onImageCaptured, loading }) => {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0, opacity: 0 }}
                             onClick={capture}
-                            className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center bg-white/10 backdrop-blur-sm active:scale-95 transition-transform"
+                            className="w-20 h-20 rounded-full border border-white/20 bg-brand-gray flex items-center justify-center active:scale-95 transition-transform shadow-2xl relative"
                         >
-                            <div className="w-16 h-16 bg-white rounded-full" />
+                            <div className="w-16 h-16 bg-white rounded-full shadow-inner" />
                         </motion.button>
                     )}
                 </AnimatePresence>
-
-                <p className="text-white/40 text-xs">
-                    {mode === 'barcode' ? "Point camera at a barcode" : "Capture a clear photo of the nutrition label"}
-                </p>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

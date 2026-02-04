@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { CheckCircle, AlertTriangle, XCircle, ChevronDown } from 'lucide-react';
+import { CheckCircle, AlertTriangle, XCircle, ChevronDown, ScanLine } from 'lucide-react';
 import clsx from 'clsx';
 import { useState } from 'react';
 
@@ -8,14 +8,38 @@ const VerdictCard = ({ result, onScanAgain }) => {
 
     if (!result) return null;
 
-    const { verdict, explanation, product_name, risk_level, ingredients_analysis } = result;
+    const { verdict, explanation, product_name, ingredients_analysis } = result;
 
     const getTheme = (v) => {
         switch (v?.toUpperCase()) {
-            case 'SAFE': return { color: 'text-safe-green', bg: 'bg-safe-green', icon: CheckCircle, border: 'border-safe-green' };
-            case 'CAUTION': return { color: 'text-caution-yellow', bg: 'bg-caution-yellow', icon: AlertTriangle, border: 'border-caution-yellow' };
-            case 'AVOID': return { color: 'text-danger-red', bg: 'bg-danger-red', icon: XCircle, border: 'border-danger-red' };
-            default: return { color: 'text-gray-400', bg: 'bg-gray-400', icon: AlertTriangle, border: 'border-gray-400' };
+            case 'SAFE':
+                return {
+                    color: 'text-brand-black',
+                    bg: 'bg-safe-green',
+                    iconColor: 'text-brand-black',
+                    icon: CheckCircle
+                };
+            case 'CAUTION':
+                return {
+                    color: 'text-brand-black',
+                    bg: 'bg-caution-yellow',
+                    iconColor: 'text-brand-black',
+                    icon: AlertTriangle
+                };
+            case 'AVOID':
+                return {
+                    color: 'text-white',
+                    bg: 'bg-danger-red',
+                    iconColor: 'text-white',
+                    icon: XCircle
+                };
+            default:
+                return {
+                    color: 'text-gray-400',
+                    bg: 'bg-brand-gray',
+                    iconColor: 'text-gray-400',
+                    icon: AlertTriangle
+                };
         }
     };
 
@@ -26,66 +50,79 @@ const VerdictCard = ({ result, onScanAgain }) => {
         <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
-            className="fixed inset-x-0 bottom-0 z-50 p-4 pb-8"
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="fixed inset-x-0 bottom-0 z-50 p-4"
         >
-            <div className={clsx(
-                "glass-panel rounded-3xl p-6 max-w-md mx-auto relative overflow-hidden",
-                "border-t-4", theme.border
-            )}>
-                {/* Glow Effect */}
-                <div className={clsx("absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full blur-3xl opacity-20 -z-10", theme.bg)} />
+            <div className="bg-[#111111] border border-white/5 rounded-[2rem] p-6 max-w-md mx-auto shadow-2xl relative overflow-hidden ring-1 ring-white/10">
 
-                <div className="flex items-start justify-between mb-4">
+                {/* Header Section */}
+                <div className="flex items-start justify-between mb-6">
                     <div>
-                        <h3 className="text-gray-400 text-sm uppercase tracking-wider font-semibold">Analyzed</h3>
-                        <h2 className="text-white text-xl font-bold truncate max-w-[200px]">{product_name}</h2>
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-acid-green animate-pulse" />
+                            <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest">Analysis System</h3>
+                        </div>
+                        <h2 className="text-white text-2xl font-bold truncate max-w-[200px] leading-tight">{product_name}</h2>
                     </div>
-                    <div className={clsx("px-3 py-1 rounded-full text-sm font-bold flex items-center gap-2", theme.color, "bg-white/5")}>
-                        <Icon size={16} />
+
+                    {/* Verdict Pillow */}
+                    <div className={clsx(
+                        "px-4 py-2 rounded-xl flex items-center gap-2 font-bold shadow-lg",
+                        theme.bg, theme.color
+                    )}>
+                        <Icon size={20} className={theme.iconColor} />
                         {verdict}
                     </div>
                 </div>
 
-                <p className="text-gray-200 text-lg leading-relaxed mb-6">
-                    {explanation}
-                </p>
+                {/* Explanation */}
+                <div className="bg-brand-black/50 p-5 rounded-2xl border border-white/5 mb-6">
+                    <p className="text-gray-300 text-base leading-relaxed">
+                        {explanation}
+                    </p>
+                </div>
 
-                {/* Expandable Details */}
+                {/* Ingredients / Details */}
                 {ingredients_analysis && ingredients_analysis.length > 0 && (
                     <div className="mb-6">
                         <button
                             onClick={() => setExpanded(!expanded)}
-                            className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors w-full"
+                            className="w-full flex items-center justify-between text-sm font-semibold text-gray-400 hover:text-white transition-colors bg-brand-gray/50 p-4 rounded-xl border border-white/5"
                         >
-                            <span>{expanded ? "Hide Details" : "View Ingredients Analysis"}</span>
-                            <ChevronDown className={clsx("transition-transform", expanded && "rotate-180")} size={14} />
+                            <span className="flex items-center gap-2">
+                                <ScanLine size={16} />
+                                {expanded ? "Hide Data" : "View Scan Data"}
+                            </span>
+                            <ChevronDown className={clsx("transition-transform duration-300", expanded && "rotate-180")} size={16} />
                         </button>
 
-                        {expanded && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                className="mt-3 space-y-2"
-                            >
+                        <motion.div
+                            initial={false}
+                            animate={{ height: expanded ? 'auto' : 0, opacity: expanded ? 1 : 0 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="pt-3 space-y-2">
                                 {ingredients_analysis.map((item, idx) => (
-                                    <div key={idx} className="flex justify-between items-start text-sm border-b border-white/5 pb-2">
-                                        <span className="text-white font-medium">{item.name}</span>
+                                    <div key={idx} className="flex justify-between items-center text-sm bg-brand-black/30 p-3 rounded-lg border border-white/5">
+                                        <span className="text-gray-300 font-medium">{item.name}</span>
                                         <span className={clsx(
-                                            item.status === 'RISKY' ? 'text-danger-red' : 'text-safe-green',
-                                            "text-xs uppercase"
+                                            "text-xs font-bold px-2 py-1 rounded bg-white/5",
+                                            item.status === 'RISKY' ? 'text-danger-red' : 'text-safe-green'
                                         )}>{item.status}</span>
                                     </div>
                                 ))}
-                            </motion.div>
-                        )}
+                            </div>
+                        </motion.div>
                     </div>
                 )}
 
+                {/* Action Button */}
                 <button
                     onClick={onScanAgain}
-                    className="w-full py-4 rounded-xl bg-white text-black font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                    className="w-full py-4 rounded-xl bg-white text-black font-bold text-lg hover:bg-neutral-200 transition-colors shadow-xl"
                 >
-                    Scan Another
+                    New Scan
                 </button>
             </div>
         </motion.div>

@@ -55,7 +55,7 @@ function App() {
   };
 
   return (
-    <div className="bg-brand-black min-h-screen text-white font-sans overflow-hidden">
+    <div className="bg-brand-black min-h-screen text-white font-sans overflow-hidden relative">
 
       {/* Error Notification */}
       <AnimatePresence>
@@ -64,7 +64,7 @@ function App() {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
-            className="fixed top-8 left-4 right-4 z-50 bg-danger-red/90 backdrop-blur-md text-white p-4 rounded-xl shadow-lg border border-red-500/50 text-center font-medium"
+            className="fixed top-8 left-4 right-4 z-50 bg-danger-red/90 backdrop-blur-md text-white p-4 rounded-2xl shadow-lg border border-red-500/50 text-center font-bold tracking-wide"
           >
             {error}
           </motion.div>
@@ -72,25 +72,35 @@ function App() {
       </AnimatePresence>
 
       {/* Main View */}
-      {!result ? (
-        <Scanner
-          onBarcodeScanned={handleBarcodeScan}
-          onImageCaptured={handleImageCapture}
-          loading={loading}
-        />
-      ) : (
-        <div className="relative h-screen w-full flex items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-800 via-brand-black to-brand-black">
-          {/* Background Product Image if available */}
-          {result.image_url && (
-            <div className="absolute inset-0 opacity-20">
-              <img src={result.image_url} alt="Product Background" className="w-full h-full object-cover blur-md" />
-            </div>
-          )}
+      <AnimatePresence mode="wait">
+        {!result ? (
+          <Scanner
+            key="scanner"
+            onBarcodeScanned={handleBarcodeScan}
+            onImageCaptured={handleImageCapture}
+            loading={loading}
+          />
+        ) : (
+          <motion.div
+            key="result"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative h-screen w-full flex items-center justify-center bg-brand-black"
+          >
+            {/* Background Product Image if available (dimmed) */}
+            {result.image_url && (
+              <div className="absolute inset-0 opacity-30">
+                <img src={result.image_url} alt="Product Background" className="w-full h-full object-cover grayscale" />
+                <div className="absolute inset-0 bg-brand-black/80" />
+              </div>
+            )}
 
-          {/* Result Card */}
-          <VerdictCard result={result} onScanAgain={handleScanAgain} />
-        </div>
-      )}
+            {/* Result Card */}
+            <VerdictCard result={result} onScanAgain={handleScanAgain} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
