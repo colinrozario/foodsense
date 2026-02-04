@@ -38,8 +38,7 @@ async def scan_barcode(request: BarcodeRequest):
             return {"verdict": "ERROR", "explanation": "Failed to connect to product database."}
             
     if data.get("status") != 1:
-        # Product not found, try to ask AI if we assume it's valid? No, just return unknown.
-        # OR we could just pass the barcode to AI? Unlikely to help.
+       
         return {"verdict": "UNKNOWN", "explanation": "Product not found in database. Try scanning the label photo."}
         
     product = data["product"]
@@ -47,15 +46,15 @@ async def scan_barcode(request: BarcodeRequest):
     ingredients_text = product.get("ingredients_text", "")
     
     if not ingredients_text:
-         # Try to construct text from nutrient levels or categories
+         
          brands = product.get("brands", "")
          categories = product.get("categories", "")
          ingredients_text = f"Product: {product_name}, Brand: {brands}, Categories: {categories}. (Ingredients list missing)"
 
-    # 2. Analyze with Gemini
+  
     ai_result = analyze_text(ingredients_text)
     
-    # 3. Merge results
+  
     return {
         "product_name": product_name,
         "image_url": product.get("image_front_url"),
