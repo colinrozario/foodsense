@@ -1,4 +1,4 @@
-# 🥗 FoodSense AI
+# FoodSense AI
 
 **Decode Your Food with AI-Powered Intelligence.**
 
@@ -6,15 +6,15 @@ FoodSense AI is a modern web application that helps you make healthier food choi
 
 ![FoodSense AI Banner](https://placeholder-for-banner.com)
 
-## ✨ Features
+## Features
 
-- **🔍 Barcode Scanning**: Instantly fetch product details from OpenFoodFacts.
-- **📸 Label Analysis**: Capture photos of nutrition labels; Gemini AI extracts and analyzes the text.
-- **🧠 AI Verdicts**: Get simple, plain-English explanations of why a product is good or bad for you.
-- **⚡ Real-time Feedback**: Instant analysis with visual risk levels (Low, Medium, High).
-- **🎨 Premium UI**: A sleek, dark-mode interface built with Glassmorphism and smooth animations.
+- **Barcode Scanning**: Instantly fetch product details from OpenFoodFacts.
+- **Label Analysis**: Capture photos of nutrition labels; Gemini AI extracts and analyzes the text.
+- **AI Verdicts**: Get simple, plain-English explanations of why a product is good or bad for you.
+- **Real-time Feedback**: Instant analysis with visual risk levels (Low, Medium, High).
+- **Premium UI**: A sleek, dark-mode interface built with Glassmorphism and smooth animations.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Backend
 - **Framework**: [FastAPI](https://fastapi.tiangolo.com/) (Python)
@@ -28,7 +28,7 @@ FoodSense AI is a modern web application that helps you make healthier food choi
 - **Animations**: [Framer Motion](https://www.framer.com/motion/)
 - **Camera/Scanning**: `react-webcam`, `react-zxing`
 
-## 🚀 Getting Started
+## Getting Started
 
 Follow these instructions to set up the project locally.
 
@@ -78,7 +78,7 @@ cd frontend
 npm install
 ```
 
-## 🏃 Running the Application
+## Running the Application
 
 You need to run both the backend and frontend servers.
 
@@ -97,11 +97,11 @@ npm run dev
 
 Open your browser and visit **`http://localhost:5173`** to use the app!
 
-## 📱 Usage
+## Usage
 1.  **Grant Camera Permissions**: The app requires access to your camera.
 2.  **Scan a Barcode**: Point the camera at a product barcode.
 3.  **Capture a Label**: Switch to "Label" mode and snap a picture of the ingredients list.
 4.  **View Verdict**: Read the AI-generated analysis and decide if you want to eat it!
 
-## 📄 License
+## License
 MIT License.
