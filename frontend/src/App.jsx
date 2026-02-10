@@ -3,6 +3,7 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import Scanner from './components/Scanner';
 import VerdictCard from './components/VerdictCard';
+import ThemeToggle from './components/ThemeToggle';
 
 // Configure Axios
 const api = axios.create({
@@ -55,7 +56,10 @@ function App() {
   };
 
   return (
-    <div className="bg-brand-black min-h-screen text-white font-sans overflow-hidden relative">
+    <div className="relative min-h-screen bg-bg-primary text-text-primary font-sans overflow-hidden transition-colors duration-300">
+
+      {/* Theme Toggle - Fixed Top Right */}
+      <ThemeToggle />
 
       {/* Error Notification */}
       <AnimatePresence>
@@ -64,39 +68,46 @@ function App() {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
-            className="fixed top-8 left-4 right-4 z-50 bg-danger-red/90 backdrop-blur-md text-white p-4 rounded-2xl shadow-lg border border-red-500/50 text-center font-bold tracking-wide"
+            className="fixed top-24 left-4 right-4 z-50 bg-status-error/90 backdrop-blur-md text-white p-4 rounded-2xl shadow-lg border border-red-500/50 text-center font-bold tracking-wide"
           >
             {error}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Main View */}
+      {/* Main View Area */}
       <AnimatePresence mode="wait">
         {!result ? (
-          <Scanner
+          <motion.div
             key="scanner"
-            onBarcodeScanned={handleBarcodeScan}
-            onImageCaptured={handleImageCapture}
-            loading={loading}
-          />
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="h-screen w-full"
+          >
+            <Scanner
+              onBarcodeScanned={handleBarcodeScan}
+              onImageCaptured={handleImageCapture}
+              loading={loading}
+            />
+          </motion.div>
         ) : (
           <motion.div
             key="result"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="relative h-screen w-full flex items-center justify-center bg-brand-black"
+            className="relative h-screen w-full flex items-center justify-center bg-bg-primary"
           >
             {/* Background Product Image if available (dimmed) */}
             {result.image_url && (
-              <div className="absolute inset-0 opacity-30">
+              <div className="absolute inset-0 opacity-20 dark:opacity-40 pointer-events-none">
                 <img src={result.image_url} alt="Product Background" className="w-full h-full object-cover grayscale" />
-                <div className="absolute inset-0 bg-brand-black/80" />
+                <div className="absolute inset-0 bg-gradient-to-b from-bg-primary via-bg-primary/80 to-bg-primary" />
               </div>
             )}
 
-            {/* Result Card */}
+            {/* Result Card Overlay */}
             <VerdictCard result={result} onScanAgain={handleScanAgain} />
           </motion.div>
         )}

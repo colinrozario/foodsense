@@ -3,17 +3,72 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Light Mode Palette (Clean/Medical) */
+    --color-bg-primary: #F8F9FA;
+    --color-bg-secondary: #FFFFFF;
+    --color-bg-glass: rgba(255, 255, 255, 0.8);
+
+    --color-text-primary: #18181B;
+    /* zinc-900 */
+    --color-text-secondary: #52525B;
+    /* zinc-600 */
+    --color-text-muted: #A1A1AA;
+    /* zinc-400 */
+
+    --color-accent: #059669;
+    /* emerald-600 */
+    --color-accent-glow: rgba(5, 150, 105, 0.2);
+
+    --color-border: rgba(0, 0, 0, 0.1);
+  }
+
+  .dark {
+    /* Dark Mode Palette (Cyberpunk/Modern) */
+    --color-bg-primary: #050505;
+    /* Deep Black */
+    --color-bg-secondary: #0A0A0A;
+    --color-bg-glass: rgba(10, 10, 10, 0.8);
+
+    --color-text-primary: #FFFFFF;
+    --color-text-secondary: #D4D4D8;
+    /* zinc-300 */
+    --color-text-muted: #71717A;
+    /* zinc-500 */
+
+    --color-accent: #CCFF00;
+    /* Acid Green */
+    --color-accent-glow: rgba(204, 255, 0, 0.15);
+
+    --color-border: rgba(255, 255, 255, 0.1);
+  }
+
   body {
-    @apply bg-brand-black text-white antialiased;
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    @apply antialiased font-sans transition-colors duration-300 ease-in-out;
   }
 }
 
 @layer utilities {
   .glass-panel {
-    @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-xl;
+    @apply backdrop-blur-md border border-border bg-bg-glass shadow-xl;
   }
-  
+
   .glass-btn {
-    @apply bg-white/10 hover:bg-white/20 active:bg-white/5 transition-all duration-200 border border-white/10;
+    @apply bg-bg-secondary hover:bg-accent/10 active:bg-accent/20 border border-border text-text-primary transition-all duration-200;
+  }
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
 }
