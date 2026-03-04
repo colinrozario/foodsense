@@ -59,6 +59,29 @@
     @apply bg-bg-secondary hover:bg-accent/10 active:bg-accent/20 border border-border text-text-primary transition-all duration-200;
   }
 
+  /* html5-qrcode overrides to make it look native and clean */
+  #reader {
+    border: none !important;
+    background: transparent !important;
+    width: 100% !important;
+  }
+
+  #reader img {
+    display: none !important;
+  }
+
+  /* Hide default icon */
+  #reader__dashboard_section_csr {
+    display: none !important;
+  }
+
+  /* Hide the ugly "Request Camera Permissions" span if possible */
+  #reader__dashboard_section_swaplink {
+    display: none !important;
+  }
+
+  /* Hide camera switch link (handled locally) */
+
   /* Hide scrollbar for Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
