@@ -13,10 +13,19 @@ const Scanner = ({ onBarcodeScanned, onImageCaptured, loading }) => {
 
     // Barcode Logic using html5-qrcode
     useEffect(() => {
+        let isMounted = true;
+
         if (mode === 'barcode' && !loading) {
+            console.log("Initializing Html5Qrcode...");
             // Delay slightly to ensure DOM element exists
             setTimeout(() => {
+                if (!isMounted) return;
                 try {
+                    // Clean up existing instance if it exists before creating a new one
+                    if (scannerRef.current) {
+                        scannerRef.current.clear().catch(e => console.log("Clear ignore", e));
+                    }
+
                     scannerRef.current = new Html5QrcodeScanner(
                         "reader",
                         { fps: 10, qrbox: { width: 250, height: 150 }, aspectRatio: 1.0, disableFlip: false },
@@ -26,6 +35,7 @@ const Scanner = ({ onBarcodeScanned, onImageCaptured, loading }) => {
                     scannerRef.current.render(
                         (decodedText) => {
                             if (!scanBlocked) {
+                                console.log("SCANNED BARCODE:", decodedText);
                                 setScanBlocked(true);
                                 onBarcodeScanned(decodedText);
                                 // Prevent multiple quick scans
@@ -39,19 +49,22 @@ const Scanner = ({ onBarcodeScanned, onImageCaptured, loading }) => {
                 } catch (err) {
                     console.error("Html5Qrcode initialization error:", err);
                 }
-            }, 100);
+            }, 250); // Increased timeout to 250ms to ensure React DOM is fully painted
         }
 
         // Cleanup function to stop scanner when mode changes or unmounts
         return () => {
+            isMounted = false;
             if (scannerRef.current) {
                 try {
+                    console.log("Clearing scanner instance...");
                     scannerRef.current.clear().catch(error => {
                         console.error("Failed to clear html5QrcodeScanner. ", error);
                     });
                 } catch (e) {
                     console.log("Scanner cleanup error", e);
                 }
+                scannerRef.current = null;
             }
         };
     }, [mode, loading, onBarcodeScanned, scanBlocked]);
