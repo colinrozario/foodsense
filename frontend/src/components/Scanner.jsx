@@ -1,6 +1,6 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Webcam from 'react-webcam';
-import { useZxing } from 'react-zxing';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import { Scan, Camera, Zap } from 'lucide-react';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,23 +8,53 @@ import { motion, AnimatePresence } from 'framer-motion';
 const Scanner = ({ onBarcodeScanned, onImageCaptured, loading }) => {
     const [mode, setMode] = useState('barcode'); // 'barcode' | 'label'
     const webcamRef = useRef(null);
+    const scannerRef = useRef(null);
+    const [scanBlocked, setScanBlocked] = useState(false);
 
-    // Barcode Logic
-    const { ref: barcodeRef } = useZxing({
-        onDecodeResult: (result) => {
-            if (!loading && mode === 'barcode') {
-                const text = result.getText();
-                if (text) {
-                    onBarcodeScanned(text);
+    // Barcode Logic using html5-qrcode
+    useEffect(() => {
+        if (mode === 'barcode' && !loading) {
+            // Delay slightly to ensure DOM element exists
+            setTimeout(() => {
+                try {
+                    scannerRef.current = new Html5QrcodeScanner(
+                        "reader",
+                        { fps: 10, qrbox: { width: 250, height: 150 }, aspectRatio: 1.0, disableFlip: false },
+                        /* verbose= */ false
+                    );
+
+                    scannerRef.current.render(
+                        (decodedText) => {
+                            if (!scanBlocked) {
+                                setScanBlocked(true);
+                                onBarcodeScanned(decodedText);
+                                // Prevent multiple quick scans
+                                setTimeout(() => setScanBlocked(false), 2000);
+                            }
+                        },
+                        (error) => {
+                            // ignore routine errors
+                        }
+                    );
+                } catch (err) {
+                    console.error("Html5Qrcode initialization error:", err);
+                }
+            }, 100);
+        }
+
+        // Cleanup function to stop scanner when mode changes or unmounts
+        return () => {
+            if (scannerRef.current) {
+                try {
+                    scannerRef.current.clear().catch(error => {
+                        console.error("Failed to clear html5QrcodeScanner. ", error);
+                    });
+                } catch (e) {
+                    console.log("Scanner cleanup error", e);
                 }
             }
-        },
-        onError: (error) => {
-            // zxing throws constant errors when no barcode is found, we can safely ignore most 
-            // but we add this handler to prevent it from bubbling up negatively
-        },
-        paused: mode !== 'barcode' || loading,
-    });
+        };
+    }, [mode, loading, onBarcodeScanned, scanBlocked]);
 
     // Image Capture Logic
     const capture = useCallback(() => {
@@ -50,12 +80,14 @@ const Scanner = ({ onBarcodeScanned, onImageCaptured, loading }) => {
             {/* Camera Viewfinder Area */}
             <div className="relative flex-1 m-4 rounded-[2rem] overflow-hidden border border-border shadow-2xl bg-black">
                 {mode === 'barcode' ? (
-                    <div className="relative h-full w-full">
-                        <video ref={barcodeRef} className="h-full w-full object-cover" />
-                        {/* High-Tech Overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center p-12 pointer-events-none">
+                    <div className="relative h-full w-full flex items-center justify-center">
+                        {/* We set a specific ID for html5-qrcode to attach to */}
+                        <div id="reader" className="w-full h-full [&>div]:!border-none" style={{ minHeight: '300px' }}></div>
+
+                        {/* High-Tech Overlay Layer */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                             <div className="w-64 h-64 relative">
-                                <div className="absolute inset-0 border-2 border-accent/30 rounded-3xl" />
+                                <div className="absolute inset-0 border-2 border-accent/20 rounded-3xl" />
                                 {/* Corners */}
                                 <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-accent -mt-1 -ml-1 rounded-tl-xl" />
                                 <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-accent -mt-1 -mr-1 rounded-tr-xl" />
@@ -71,7 +103,7 @@ const Scanner = ({ onBarcodeScanned, onImageCaptured, loading }) => {
                         </div>
                     </div>
                 ) : (
-                    <div className="relative h-full w-full">
+                    <div className="relative h-full w-full z-0">
                         <Webcam
                             ref={webcamRef}
                             audio={false}
@@ -91,7 +123,7 @@ const Scanner = ({ onBarcodeScanned, onImageCaptured, loading }) => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-bg-glass backdrop-blur-md flex flex-col items-center justify-center z-20"
+                            className="absolute inset-0 bg-bg-glass backdrop-blur-md flex flex-col items-center justify-center z-50"
                         >
                             <div className="relative">
                                 <div className="w-20 h-20 border-4 border-border rounded-full" />
@@ -106,7 +138,7 @@ const Scanner = ({ onBarcodeScanned, onImageCaptured, loading }) => {
             </div>
 
             {/* Controls Area */}
-            <div className="h-auto pb-8 w-full bg-bg-primary flex flex-col items-center justify-end px-6 gap-6 z-10">
+            <div className="h-auto pb-8 w-full bg-bg-primary flex flex-col items-center justify-end px-6 gap-6 z-20 relative">
 
                 <p className="text-text-muted text-xs font-bold tracking-widest uppercase mb-2">
                     {mode === 'barcode' ? "Align barcode within frame" : "Capture nutrition label"}
