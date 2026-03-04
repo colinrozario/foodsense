@@ -28,7 +28,7 @@ async def scan_barcode(request: BarcodeRequest):
     barcode = request.barcode
     print(f"Scanning barcode: {barcode}")
     
-    # 1. Fetch from OpenFoodFacts
+    # Keep OpenFoodFacts per User Request
     url = f"https://world.openfoodfacts.org/api/v2/product/{barcode}.json"
     async with httpx.AsyncClient() as client:
         try:
@@ -38,7 +38,6 @@ async def scan_barcode(request: BarcodeRequest):
             return {"verdict": "ERROR", "explanation": "Failed to connect to product database."}
             
     if data.get("status") != 1:
-       
         return {"verdict": "UNKNOWN", "explanation": "Product not found in database. Try scanning the label photo."}
         
     product = data["product"]
@@ -46,15 +45,13 @@ async def scan_barcode(request: BarcodeRequest):
     ingredients_text = product.get("ingredients_text", "")
     
     if not ingredients_text:
-         
          brands = product.get("brands", "")
          categories = product.get("categories", "")
          ingredients_text = f"Product: {product_name}, Brand: {brands}, Categories: {categories}. (Ingredients list missing)"
 
-  
+    # Use the Local AI Text Analyzer instead of Gemini
     ai_result = analyze_text(ingredients_text)
     
-  
     return {
         "product_name": product_name,
         "image_url": product.get("image_front_url"),
@@ -68,12 +65,12 @@ async def scan_image(file: UploadFile = File(...)):
     
     content = await file.read()
     
-    # Analyze directly with Gemini Vision
+    # Use Local EasyOCR model to process the image bytes and analyze the extracted text
     ai_result = analyze_image(content, mime_type=file.content_type)
     
     return {
-        "product_name": "Scanned Label", 
-        "image_url": None, # Could upload to S3 here in real app
+        "product_name": "Scanned Label (Local AI)", 
+        "image_url": None, 
         **ai_result
     }
 

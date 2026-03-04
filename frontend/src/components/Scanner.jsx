@@ -13,8 +13,15 @@ const Scanner = ({ onBarcodeScanned, onImageCaptured, loading }) => {
     const { ref: barcodeRef } = useZxing({
         onDecodeResult: (result) => {
             if (!loading && mode === 'barcode') {
-                onBarcodeScanned(result.getText());
+                const text = result.getText();
+                if (text) {
+                    onBarcodeScanned(text);
+                }
             }
+        },
+        onError: (error) => {
+            // zxing throws constant errors when no barcode is found, we can safely ignore most 
+            // but we add this handler to prevent it from bubbling up negatively
         },
         paused: mode !== 'barcode' || loading,
     });
