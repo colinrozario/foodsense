@@ -1,7 +1,8 @@
 fastapi
 uvicorn[standard]
-google-generativeai
 httpx
 python-multipart
 sqlalchemy
 python-dotenv
+easyocr
+opencv-python-headless

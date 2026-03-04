@@ -1,78 +1,84 @@
 import os
-import google.generativeai as genai
-import json
-from dotenv import load_dotenv
+import easyocr
+from typing import Dict, Any
 
-load_dotenv()
+print("Initializing local OCR model (EasyOCR). This might take a moment if it's downloading models...")
+# Initialize EasyOCR reader for English. Set GPU to False to ensure compatibility everywhere.
+reader = easyocr.Reader(['en'], gpu=False)
 
-api_key = os.getenv("GEMINI_API_KEY")
-if not api_key:
-    print("Warning: GEMINI_API_KEY not found in environment variables.")
-
-genai.configure(api_key=api_key)
-
-generation_config = {
-  "temperature": 0.4,
-  "top_p": 0.95,
-  "top_k": 40,
-  "max_output_tokens": 1024,
-  "response_mime_type": "application/json",
-}
-
-model = genai.GenerativeModel(
-  model_name="gemini-1.5-flash",
-  generation_config=generation_config,
-)
-
-SAFE_PROMPT = """
-You are a food safety expert assistant. Analyze the provided product information (ingredients, name, or image).
-Your goal is to provide a simple, plain English verdict for a consumer.
-
-Return ONLY a valid JSON object with this structure:
-{
-  "verdict": "SAFE" | "CAUTION" | "AVOID",
-  "explanation": "A short, simple sentence explaining why (e.g., 'Contains high sugar and artificial colors').",
-  "risk_level": "LOW" | "MEDIUM" | "HIGH",
-  "ingredients_analysis": [
-    {"name": "ingredient_name", "status": "SAFE" | "RISKY", "reason": "brief reason"}
-  ],
-  "nutritional_highlights": {
-     "sugar": "LOW" | "MODERATE" | "HIGH",
-     "sodium": "LOW" | "MODERATE" | "HIGH",
-     "processing": "NOVA1" | "NOVA4" 
-  }
-}
-
-Rules based on 'Clean Health':
-- High Sugar (>20g/100g) -> CAUTION or AVOID.
-- Artificial Colors (Red 40, Yellow 5, etc.) -> CAUTION.
-- Dangerous Preservatives (Nitrates, BHA/BHT) -> AVOID.
-- Whole foods -> SAFE.
-
-If the image or text is not a food product, set verdict to "UNKNOWN" and explanation to "I couldn't identify this as a food product."
-"""
-
-def analyze_text(text: str):
-    try:
-        chat_session = model.start_chat(history=[
-            {"role": "user", "parts": [SAFE_PROMPT]}
-        ])
-        response = chat_session.send_message(f"Analyze this product properties/ingredients: {text}")
-        return json.loads(response.text)
-    except Exception as e:
-        print(f"Error analyzing text: {e}")
-        return {"verdict": "ERROR", "explanation": "Failed to analyze product."}
-
-def analyze_image(image_bytes: bytes, mime_type: str = "image/jpeg"):
-    try:
-        # Create the image part
-        image_part = {
-            "mime_type": mime_type,
-            "data": image_bytes
-        }
+def analyze_text(text: str) -> Dict[str, Any]:
+    if not text:
+        return {"verdict": "UNKNOWN", "explanation": "No ingredients text provided for analysis."}
         
-        response = model.generate_content([SAFE_PROMPT, image_part, "Analyze this food label."])
-        return json.loads(response.text)
+    text_lower = text.lower()
+    
+    # Rule-based logic engine
+    risks = []
+    
+    # 1. Artificial Colors
+    colors = ["red 40", "yellow 5", "yellow 6", "blue 1", "artificial color", "caramel color"]
+    for c in colors:
+        if c in text_lower:
+            risks.append({"name": c.title(), "status": "CAUTION", "reason": "Artificial color, may cause sensitivities."})
+            
+    # 2. Preservatives & Additives
+    preservatives = ["bha", "bht", "nitrate", "nitrite", "sodium benzoate", "potassium sorbate", "msg", "monosodium glutamate", "tbhq"]
+    for p in preservatives:
+        if p in text_lower:
+            status = "AVOID" if p in ["bha", "bht", "nitrate", "nitrite", "tbhq"] else "CAUTION"
+            risks.append({"name": p.title(), "status": status, "reason": "Chemical preservative or additive."})
+            
+    # 3. Hidden Sugars
+    sugars = ["high fructose corn syrup", "corn syrup", "dextrose", "maltodextrin", "sucrose", "fructose", "cane sugar", "agave"]
+    sugar_count = 0
+    for s in sugars:
+        if s in text_lower:
+            sugar_count += 1
+            risks.append({"name": s.title(), "status": "CAUTION", "reason": "Added sugar/sweetener."})
+            
+    # Determine Overall Verdict
+    verdict = "SAFE"
+    explanation = "This product appears to have clean ingredients."
+    risk_level = "LOW"
+    
+    if any(r["status"] == "AVOID" for r in risks):
+        verdict = "AVOID"
+        explanation = "Contains harmful preservatives or additives. Best to avoid."
+        risk_level = "HIGH"
+    elif len(risks) >= 3 or sugar_count >= 2:
+        verdict = "CAUTION"
+        explanation = "Contains multiple additives or processed sugars. Consume in moderation."
+        risk_level = "MEDIUM"
+    elif len(risks) > 0:
+        verdict = "CAUTION"
+        explanation = "Contains some artificial ingredients or added sugars."
+        risk_level = "MEDIUM"
+        
+    # If no ingredients were flagged but text isn't empty, it's considered safe enough
+    if len(risks) == 0:
+        risks.append({"name": "Whole Ingredients", "status": "SAFE", "reason": "No major harmful additives detected."})
+        
+    return {
+        "verdict": verdict,
+        "explanation": explanation,
+        "risk_level": risk_level,
+        "ingredients_analysis": risks,
+        "nutritional_highlights": {
+             "sugar": "HIGH" if sugar_count >= 2 else ("MODERATE" if sugar_count == 1 else "LOW"),
+             "sodium": "UNKNOWN",
+             "processing": "NOVA4" if (len(risks) > 1 and verdict != "SAFE") else "NOVA1" 
+        }
+    }
+
+def analyze_image(image_bytes: bytes, mime_type: str = "image/jpeg") -> Dict[str, Any]:
+    try:
+        # EasyOCR can directly read image bytes
+        print("Extracting text from image using Local OCR...")
+        result = reader.readtext(image_bytes, detail=0)
+        extracted_text = " ".join(result)
+        print(f"Extracted Text: {extracted_text}")
+        
+        return analyze_text(extracted_text)
     except Exception as e:
         print(f"Error analyzing image: {e}")
-        return {"verdict": "ERROR", "explanation": "Failed to analyze image."}
+        return {"verdict": "ERROR", "explanation": "Failed to extract text from image."}
