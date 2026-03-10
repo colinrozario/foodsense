@@ -4,7 +4,7 @@
 
 FoodSense AI is a modern web application that helps you make healthier food choices by scanning product barcodes or analyzing nutrition labels using advanced AI. It provides clear "SAFE", "CAUTION", or "AVOID" verdicts based on ingredients and nutritional value.
 
-![FoodSense AI Banner](https://placeholder-for-banner.com)
+
 
 ## Features
 
