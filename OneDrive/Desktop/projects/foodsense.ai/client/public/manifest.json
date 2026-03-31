@@ -1,0 +1,18 @@
+{
+  "name": "foodsense.ai",
+  "short_name": "foodsense",
+  "description": "AI-powered food intelligence. Scan any barcode or label for instant ingredient analysis.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["food", "health", "lifestyle"]
+}
