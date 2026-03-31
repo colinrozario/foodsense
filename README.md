@@ -17,10 +17,9 @@ FoodSense AI is a modern web application that helps you make healthier food choi
 ## Tech Stack
 
 ### Backend
-- **Framework**: [FastAPI](https://fastapi.tiangolo.com/) (Python)
-- **AI Model**: [Google Gemini 1.5 Flash](https://deepmind.google/technologies/gemini/)
-- **Data Source**: [OpenFoodFacts API](https://world.openfoodfacts.org/)
-- **Http Client**: HttpX
+  - **Framework**: [FastAPI](https://fastapi.tiangolo.com/) (Python)
+  - **Data Source**: [OpenFoodFacts API](https://world.openfoodfacts.org/)
+  - - **Http Client**: HttpX
 
 ### Frontend
 - **Framework**: [React](https://react.dev/) + [Vite](https://vitejs.dev/)
